@@ -1,7 +1,7 @@
 import type { Context } from '@deepseek-ai/cordis'
 
 /** Cordis 诊断信息中使用的飞书插件名称。 */
-export const name = 'lark-plugin'
+export const name = 'dsh-feishu-bot'
 
 /**
  * 注册插件生命周期探针。
@@ -9,11 +9,11 @@ export const name = 'lark-plugin'
  * @param ctx - 管理插件生命周期的 Cordis Context。
  */
 export function apply(ctx: Context): void {
-  console.log('[lark-plugin] loaded')
+  console.log('[dsh-feishu-bot] loaded')
 
   ctx.effect(() => {
     return () => {
-      console.log('[lark-plugin] unloaded')
+      console.log('[dsh-feishu-bot] unloaded')
     }
   })
 }
