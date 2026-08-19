@@ -1,12 +1,12 @@
 import type { Context } from '@deepseek-ai/cordis'
 
-/** Identifies the minimal Lark lifecycle plugin in Cordis diagnostics. */
+/** Cordis 诊断信息中使用的飞书插件名称。 */
 export const name = 'lark-plugin'
 
 /**
- * Installs a lifecycle probe whose disposer runs when Cordis unloads the plugin.
+ * 注册插件生命周期探针。
  *
- * @param ctx - Cordis context that owns the plugin lifecycle.
+ * @param ctx - 管理插件生命周期的 Cordis Context。
  */
 export function apply(ctx: Context): void {
   console.log('[lark-plugin] loaded')
