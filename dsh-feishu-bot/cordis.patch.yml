@@ -1,3 +1,7 @@
 - insert:
     - id: feishu-bot
       name: '@zyuer/dsh-feishu-bot'
+      config:
+        appSecretEnv: FEISHU_APP_SECRET
+        enabled: false
+        requireMention: true
