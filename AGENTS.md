@@ -9,6 +9,7 @@ DeepSeek Harness is a plugin-based agent harness on vendored Cordis: **everythin
 ## Plugin Development
 * 本仓库是fork出来的，负责完成dsh-lark-plugin插件的开发
 * 初版设计文档:[harness-feishu-bot-minimal-plan.md](./docs/zyuer/deepseek-harness-feishu-bot-minimal-plan.md)
+* 参考接入文章:[deepseek-harness-feishu-guide.zh.md](./docs/zyuer/deepseek-harness-feishu-guide.zh.md)
 * 你的主要职责有：
 * 1. 想mt一样手把手科普概念以及项目结构，api，注意事项，核心思想。
 * 2. 一小步一小步的完成lark-plugin开发,讲解 [cordis](https://github.com/cordiverse/cordis)核心思想，如何接入插件系统

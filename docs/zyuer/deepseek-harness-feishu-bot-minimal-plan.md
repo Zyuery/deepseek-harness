@@ -221,4 +221,4 @@ dsh-feishu-bot/
 - [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)
 - [DSH 扩展插件形态](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/cookbook/extension-cookbook.md)
 - [飞书 Node SDK Channel](https://github.com/larksuite/node-sdk/blob/main/docs/channel.zh.md)
-- [DeepSeek Harness 接入飞书指南（参考文章）](https://wepie.feishu.cn/wiki/X6srwnKGmiDE2MkAuZEc5evanEh)
+- [DeepSeek Harness 接入飞书指南（参考文章）](deepseek-harness-feishu-guide.md)
