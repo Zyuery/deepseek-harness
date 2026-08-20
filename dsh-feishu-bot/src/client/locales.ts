@@ -10,6 +10,8 @@ export type FeishuBotLocaleKey =
     | 'appSecretHint'
     | 'secretConfigured'
     | 'secretMissing'
+    | 'reasoningEffort'
+    | 'reasoningEffortHint'
     | 'requireMention'
     | 'requireMentionHint'
     | 'save'
@@ -28,9 +30,11 @@ export const zh: Record<FeishuBotLocaleKey, string> = {
     appId: 'App ID',
     appIdHint: '飞书开放平台自建应用的 App ID。',
     appSecret: 'App Secret',
-    appSecretHint: '密钥单独存入 DSH 凭据服务，不会写入普通设置。留空保留当前密钥。',
+    appSecretHint: '星号表示密钥已配置；输入新值可以替换。密钥不会写入普通设置。',
     secretConfigured: '已配置',
     secretMissing: '未配置',
+    reasoningEffort: '模型推理强度',
+    reasoningEffortHint: '默认使用 off，让模型直接生成飞书可见的正文；其他值由当前模型提供方定义。',
     requireMention: '群聊中必须 @ 机器人',
     requireMentionHint: '开启后，群里的普通消息不会触发 DSH。',
     save: '保存',
@@ -50,9 +54,11 @@ export const en: Record<FeishuBotLocaleKey, string> = {
     appId: 'App ID',
     appIdHint: 'The App ID of the custom app in Feishu Open Platform.',
     appSecret: 'App Secret',
-    appSecretHint: 'Stored separately by DSH credentials, never in ordinary settings. Leave blank to keep the current secret.',
+    appSecretHint: 'Asterisks mean a secret is configured; enter a new value to replace it. The secret is never stored in ordinary settings.',
     secretConfigured: 'Configured',
     secretMissing: 'Not configured',
+    reasoningEffort: 'Model reasoning effort',
+    reasoningEffortHint: 'The default is off so the model emits Feishu-visible text directly; other values are provider-defined.',
     requireMention: 'Require @mention in group chats',
     requireMentionHint: 'When enabled, ordinary group messages do not trigger DSH.',
     save: 'Save',

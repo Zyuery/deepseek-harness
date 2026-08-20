@@ -20,6 +20,8 @@ export interface FeishuBotSettings {
     appId?: string
     /** App Secret 在 DSH 凭据服务中的引用。 */
     appSecretEnv?: string
+    /** 飞书专用 Agent 使用的模型推理强度。 */
+    reasoningEffort?: string
     /** 群聊是否必须 @ 机器人。 */
     requireMention?: boolean
 }
@@ -93,10 +95,11 @@ const styles: Record<string, CSSProperties> = {
         borderRadius: 8,
         padding: '9px 16px',
         fontWeight: 600,
-        color: 'white',
-        background: 'var(--dsw-specific-sidebar-nav-item-active-accent, #2563eb)',
+        color: 'var(--dsw-alias-bg-layer-3, white)',
+        background: 'var(--dsw-alias-label-primary, #111827)',
         cursor: 'pointer',
     },
+    buttonDisabled: { cursor: 'default', opacity: 0.4 },
 }
 
 function draftFrom(settings: FeishuBotSettings | undefined): FeishuBotDraft {
@@ -104,6 +107,7 @@ function draftFrom(settings: FeishuBotSettings | undefined): FeishuBotDraft {
         enabled: settings?.enabled ?? false,
         appId: settings?.appId ?? '',
         appSecret: '',
+        reasoningEffort: settings?.reasoningEffort ?? 'off',
         requireMention: settings?.requireMention ?? true,
     }
 }
@@ -212,6 +216,7 @@ export function FeishuBotCard(props: FeishuBotCardProps) {
                             style={styles.input}
                             type="password"
                             autoComplete="off"
+                            placeholder={credential.configured ? '********' : undefined}
                             value={draft.appSecret}
                             disabled={disabled || !credential.writable}
                             onChange={(event) => {
@@ -220,6 +225,23 @@ export function FeishuBotCard(props: FeishuBotCardProps) {
                             }}
                         />
                         <p style={styles.hint}>{props.t('appSecretHint')}</p>
+                    </div>
+
+                    <div style={styles.field}>
+                        <label style={styles.label} htmlFor="feishu-bot-reasoning-effort">
+                            {props.t('reasoningEffort')}
+                        </label>
+                        <input
+                            id="feishu-bot-reasoning-effort"
+                            style={styles.input}
+                            value={draft.reasoningEffort}
+                            disabled={disabled}
+                            onChange={(event) => {
+                                setResult(undefined)
+                                setDraft(current => ({ ...current, reasoningEffort: event.target.value }))
+                            }}
+                        />
+                        <p style={styles.hint}>{props.t('reasoningEffortHint')}</p>
                     </div>
 
                     <div style={styles.field}>
@@ -266,7 +288,10 @@ export function FeishuBotCard(props: FeishuBotCardProps) {
                                 : <p style={styles.status} role="status">{props.t(displayedStatus)}</p>}
                         <button
                             type="button"
-                            style={styles.button}
+                            style={{
+                                ...styles.button,
+                                ...(disabled || invalid ? styles.buttonDisabled : {}),
+                            }}
                             disabled={disabled || invalid}
                             onClick={() => { void save() }}
                         >

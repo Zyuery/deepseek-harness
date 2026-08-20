@@ -10,6 +10,7 @@ function draft(values: Partial<FeishuBotDraft> = {}): FeishuBotDraft {
     enabled: false,
     appId: '',
     appSecret: '',
+    reasoningEffort: 'off',
     requireMention: true,
     ...values,
   }
@@ -59,6 +60,7 @@ describe('Feishu graphical settings', () => {
       expectedRevision: 7,
       ops: [
         { op: 'set', path: ['appId'], value: 'cli_test' },
+        { op: 'set', path: ['reasoningEffort'], value: 'off' },
         { op: 'set', path: ['requireMention'], value: false },
         { op: 'set', path: ['enabled'], value: true },
       ],
@@ -78,6 +80,20 @@ describe('Feishu graphical settings', () => {
     )
 
     expect(result).toBe('credential-failed')
+    expect(mutate).not.toHaveBeenCalled()
+  })
+
+  it('rejects an empty reasoning effort', async () => {
+    const { api, mutate } = fakeApi()
+
+    await expect(saveFeishuBotSettings(
+      api,
+      'feishu-bot',
+      'FEISHU_APP_SECRET',
+      1,
+      draft({ reasoningEffort: ' ' }),
+      true,
+    )).resolves.toBe('invalid')
     expect(mutate).not.toHaveBeenCalled()
   })
 })

@@ -15,11 +15,20 @@ const lark = vi.hoisted(() => ({
   disconnect: vi.fn<() => Promise<void>>(),
   unsubscribe: vi.fn<() => void>(),
   onMessage: vi.fn(),
+  streamReply: vi.fn(),
   createChannel: vi.fn(),
+}))
+
+const controller = vi.hoisted(() => ({
+  handle: vi.fn(),
 }))
 
 vi.mock('../src/infra/lark/channel.ts', () => ({
   createChannel: lark.createChannel,
+}))
+
+vi.mock('../src/controller/message-controller.ts', () => ({
+  createMessageController: () => ({ handle: controller.handle }),
 }))
 
 class MemorySettings extends SettingsProvider {
@@ -80,6 +89,12 @@ class AgentsService extends Service {
   }
 }
 
+class AgentDefaultModelService extends Service {
+  constructor(ctx: Context) {
+    super(ctx, 'agentDefaultModel')
+  }
+}
+
 class SessionPersistenceService extends Service {
   constructor(ctx: Context) {
     super(ctx, 'sessionPersistence')
@@ -87,6 +102,7 @@ class SessionPersistenceService extends Service {
 }
 
 async function mountAgentServices(ctx: Context): Promise<void> {
+  await ctx.plugin(AgentDefaultModelService)
   await ctx.plugin(AgentsService)
   await ctx.plugin(SessionPersistenceService)
 }
@@ -110,10 +126,13 @@ describe('Feishu bot plugin lifecycle', () => {
     lark.connect.mockResolvedValue()
     lark.disconnect.mockResolvedValue()
     lark.onMessage.mockReturnValue(lark.unsubscribe)
+    lark.streamReply.mockResolvedValue()
+    controller.handle.mockResolvedValue()
     lark.createChannel.mockReturnValue({
       connect: lark.connect,
       disconnect: lark.disconnect,
       onMessage: lark.onMessage,
+      streamReply: lark.streamReply,
     })
   })
 
@@ -123,6 +142,7 @@ describe('Feishu bot plugin lifecycle', () => {
     expect(ctx.settings.describe().find(({ ns }) => ns === 'feishu-bot')?.value).toEqual({
       enabled: false,
       appSecretEnv: 'FEISHU_APP_SECRET',
+      reasoningEffort: 'off',
       requireMention: true,
     })
     expect(lark.createChannel).not.toHaveBeenCalled()
@@ -216,5 +236,40 @@ describe('Feishu bot plugin lifecycle', () => {
     await expect(bot).rejects.toThrow(/handshake failed/)
     expect(lark.unsubscribe).toHaveBeenCalledOnce()
     expect(lark.disconnect).not.toHaveBeenCalled()
+  })
+
+  it('acknowledges inbound events before reply completion and drains replies on dispose', async () => {
+    let finishReply!: () => void
+    controller.handle.mockReturnValueOnce(new Promise<void>((resolve) => {
+      finishReply = resolve
+    }))
+    const { bot } = await boot({
+      settings: {
+        'feishu-bot': { appId: 'cli_test', enabled: true },
+      },
+      credentials: { FEISHU_APP_SECRET: 'secret_test' },
+    })
+    const handler = lark.onMessage.mock.calls[0]?.[0]
+    if (typeof handler !== 'function') throw new Error('message handler was not registered')
+    const message = {
+      messageId: 'om_test',
+      chatId: 'oc_test',
+      senderId: 'ou_test',
+      chatType: 'direct',
+      mentionedBot: false,
+      text: '你好',
+    }
+
+    expect(handler(message)).toBeUndefined()
+    const dispose = bot.dispose()
+    await vi.waitFor(() => expect(lark.unsubscribe).toHaveBeenCalledOnce())
+    expect(lark.disconnect).not.toHaveBeenCalled()
+    const signal = controller.handle.mock.calls[0]?.[1]
+    expect(signal).toBeInstanceOf(AbortSignal)
+    expect(signal.aborted).toBe(true)
+
+    finishReply()
+    await dispose
+    expect(lark.disconnect).toHaveBeenCalledOnce()
   })
 })

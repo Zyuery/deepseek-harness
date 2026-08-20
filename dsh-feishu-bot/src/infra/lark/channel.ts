@@ -1,6 +1,7 @@
-/** 飞书官方 Channel 的连接生命周期适配器。 */
+/** 飞书官方 Channel 的连接、入站归一化和流式回复适配器。 */
 
 import { createLarkChannel as createSdkChannel } from '@larksuiteoapi/node-sdk'
+import type { ReplyGateway } from '../../controller/reply-gateway.ts'
 import type { InboundMessage } from '../../model/inbound-message.ts'
 
 /** 创建飞书连接所需的凭据和消息策略。 */
@@ -13,12 +14,10 @@ export interface LarkChannelConfig {
     requireMention: boolean
 }
 
-/** 插件入口负责管理的飞书连接生命周期。 */
-export interface LarkChannel {
+/** 插件入口负责管理的飞书连接生命周期和回复端口。 */
+export interface LarkChannel extends ReplyGateway {
     connect(): Promise<void>
-
     disconnect(): Promise<void>
-
     onMessage(
         handler: (message: InboundMessage) => void | Promise<void>,
     ): () => void
@@ -43,6 +42,17 @@ export function createChannel(config: LarkChannelConfig): LarkChannel {
     return {
         connect: () => sdkChannel.connect(),
         disconnect: () => sdkChannel.disconnect(),
+        async streamReply(message, produce) {
+            await sdkChannel.stream(message.chatId, {
+                markdown: async (controller) => {
+                    await produce((text) => controller.append(text))
+                },
+            }, {
+                replyTo: message.messageId,
+                replyInThread: message.chatType === 'group'
+                    && (message.threadId !== undefined || message.rootId !== undefined),
+            })
+        },
         onMessage(handler) {
             return sdkChannel.on('message', (message) => {
                 return handler({

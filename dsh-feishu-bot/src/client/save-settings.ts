@@ -8,6 +8,8 @@ export interface FeishuBotDraft {
     appId: string
     /** 只写的 App Secret 输入值。 */
     appSecret: string
+    /** 飞书专用 Agent 使用的模型推理强度。 */
+    reasoningEffort: string
     /** 群聊是否需要 @ 机器人。 */
     requireMention: boolean
 }
@@ -26,6 +28,7 @@ type SettingsApi = Pick<IApiClient, 'credentials' | 'settings'>
  */
 export function canEnable(draft: FeishuBotDraft, secretConfigured: boolean): boolean {
     return draft.appId.trim().length > 0
+        && draft.reasoningEffort.trim().length > 0
         && (secretConfigured || draft.appSecret.trim().length > 0)
 }
 
@@ -48,7 +51,9 @@ export async function saveFeishuBotSettings(
     draft: FeishuBotDraft,
     secretConfigured: boolean,
 ): Promise<SaveResult> {
-    if (draft.enabled && !canEnable(draft, secretConfigured)) return 'invalid'
+    const reasoningEffort = draft.reasoningEffort.trim()
+    if (reasoningEffort.length === 0
+        || draft.enabled && !canEnable(draft, secretConfigured)) return 'invalid'
 
     const secret = draft.appSecret.trim()
     if (secret.length > 0) {
@@ -68,6 +73,7 @@ export async function saveFeishuBotSettings(
                 appId.length === 0
                     ? { op: 'unset', path: ['appId'] }
                     : { op: 'set', path: ['appId'], value: appId },
+                { op: 'set', path: ['reasoningEffort'], value: reasoningEffort },
                 { op: 'set', path: ['requireMention'], value: draft.requireMention },
                 { op: 'set', path: ['enabled'], value: draft.enabled },
             ],

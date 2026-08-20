@@ -18,7 +18,13 @@ export const FEISHU_BOT_SETTINGS_NAMESPACE = settingsNamespace('feishu-bot')
 export const DEFAULT_APP_SECRET_REF = 'FEISHU_APP_SECRET'
 
 /** 插件必须在 DSH 的设置和凭据服务就绪后启动。 */
-export const inject = ['settings', 'credentials', 'agents', 'sessionPersistence']
+export const inject = [
+    'settings',
+    'credentials',
+    'agentDefaultModel',
+    'agents',
+    'sessionPersistence',
+]
 
 /** 飞书机器人的可视化配置。 */
 export interface Config {
@@ -28,6 +34,8 @@ export interface Config {
     appId?: string
     /** 保存 App Secret 的 DSH 凭据引用。 */
     appSecretEnv?: string
+    /** 飞书专用 Agent 使用的模型推理强度。 */
+    reasoningEffort?: string
     /** 群聊消息是否必须明确提及机器人。 */
     requireMention?: boolean
 }
@@ -37,6 +45,7 @@ export const Config: z<Config> = z.object({
     enabled: z.boolean().default(false),
     appId: z.string(),
     appSecretEnv: z.string().role('credential-ref').default(DEFAULT_APP_SECRET_REF),
+    reasoningEffort: z.string().min(1).default('off'),
     requireMention: z.boolean().default(true),
 })
 
@@ -60,6 +69,8 @@ export function assertServiceableConfig(config: Config): void {
 interface ActiveChannel {
     channel: LarkChannel
     unsubscribe: () => void
+    replyAbort: AbortController
+    replyTasks: Set<Promise<void>>
     connected: boolean
 }
 
@@ -111,6 +122,8 @@ export async function apply(ctx: Context, config: Config = {}): Promise<void> {
             active = undefined
             if (previous === undefined) return
             previous.unsubscribe()
+            previous.replyAbort.abort()
+            await Promise.allSettled(previous.replyTasks)
             if (previous.connected) await previous.channel.disconnect()
         }
 
@@ -123,15 +136,36 @@ export async function apply(ctx: Context, config: Config = {}): Promise<void> {
             if (current.enabled !== true) return
             const channelConfig = await resolveChannelConfig(ctx, current)
             const channel = createChannel(channelConfig)
-            const controller = createMessageController(createDshAgentGateway(ctx, {
-                sessionNamespace: channelConfig.appId,
-            }))
+            const controller = createMessageController(
+                createDshAgentGateway(ctx, {
+                    sessionNamespace: channelConfig.appId,
+                    workspaceRoot: process.cwd(),
+                    ...current.reasoningEffort === undefined
+                        ? {}
+                        : { reasoningEffort: current.reasoningEffort },
+                }),
+                channel,
+            )
+            const replyAbort = new AbortController()
+            const replyTasks = new Set<Promise<void>>()
             const next: ActiveChannel = {
                 channel,
-                unsubscribe: channel.onMessage(async (message) => {
+                unsubscribe: channel.onMessage((message) => {
                     logInboundMessage(ctx, message)
-                    await controller.handle(message)
+                    const task = controller.handle(message, replyAbort.signal)
+                    replyTasks.add(task)
+                    void task
+                        .catch((error: unknown) => {
+                            ctx.logger.error(
+                                'failed to reply to Feishu message %s: %s',
+                                message.messageId,
+                                String(error),
+                            )
+                        })
+                        .finally(() => replyTasks.delete(task))
                 }),
+                replyAbort,
+                replyTasks,
                 connected: false,
             }
             active = next

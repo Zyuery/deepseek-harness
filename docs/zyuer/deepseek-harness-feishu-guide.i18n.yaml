@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/zyuer/deepseek-harness-feishu-guide.md
-deepseek-harness-feishu-guide.md: 040d4cdad4357c2f185933d128069eddbcb97a67
-deepseek-harness-feishu-guide.zh.md: 0a6983849444afe10682f0aa05d410472c521f67
+deepseek-harness-feishu-guide.md: 3eff78b4897c79fbe5d377f518bab9b0a6bccbd3
+deepseek-harness-feishu-guide.zh.md: c1945fde14652cc40e730b4f4e3d7457b508335a

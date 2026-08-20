@@ -33,6 +33,7 @@
 
 - 应用能力 → 权限管理，开通：
 - **`im:message` 获取与发送单聊、群组消息**
+- `cardkit:card:write` 创建和更新流式回复卡片
 - `im:message.reactions:write_only` 发送、删除消息表情回复（可选，用于 🤔 处理中反馈）
 - `docx:document` 云文档相关权限（可选，用于机器人创建飞书云文档）
 - 如需与外部（跨企业）用户单聊：开启「对外共享能力」，需完成企业认证或个人实名认证
@@ -126,6 +127,8 @@ POST https://open.feishu.cn/open-apis/im/v1/messages?receive_id_type=chat_id
 
 - 桥接日志出现 `ws client ready` / `channel connected` 说明长连接建立成功
 - 发一条消息给机器人：应先出现 🤔，随后收到卡片回复
+- `99991672` 且提示缺少 `cardkit:card:write`：开通该权限、发布应用新版本并完成管理员审批
+- 群聊中只有 @ 机器人的消息到达：为应用开通读取群内所有消息的权限；关闭本地的 @ 过滤项不能扩大飞书的事件投递范围
 - `99991663`：token 无效，重新获取 `tenant_access_token`
 - `230002`：机器人不在该会话中（如被移出群）
 - `231001`：表情类型无效，参考官方表情文案说明

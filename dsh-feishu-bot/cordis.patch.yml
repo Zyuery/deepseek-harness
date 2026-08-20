@@ -4,4 +4,5 @@
       config:
         appSecretEnv: FEISHU_APP_SECRET
         enabled: false
+        reasoningEffort: off
         requireMention: true

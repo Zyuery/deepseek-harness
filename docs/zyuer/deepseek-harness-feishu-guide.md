@@ -33,6 +33,7 @@ Data flow: Feishu user → bot long connection → bridge → `POST /api/session
 
 - Under App Capabilities → Permission Management, grant:
 - **`im:message` for reading and sending direct and group messages**
+- `cardkit:card:write` for creating and updating streaming reply cards
 - `im:message.reactions:write_only` for adding and removing message reactions (optional, used for the 🤔 processing indicator)
 - `docx:document` for cloud document access (optional, used when the bot creates Feishu documents)
 - To support direct messages with external users in other organizations, enable external sharing; this requires enterprise or individual identity verification
@@ -126,6 +127,8 @@ When a message arrives, the bridge can add a reaction to indicate that processin
 
 - Bridge logs containing `ws client ready` and `channel connected` indicate that the long connection is established
 - Send a message to the bot: a 🤔 reaction should appear first, followed by a card response
+- `99991672` with required scope `cardkit:card:write`: grant the permission, publish a new app version, and complete administrator approval
+- Only @mentioned group messages arrive: grant the app permission to read all group messages; disabling a local mention filter does not expand Feishu event delivery
 - `99991663`: the token is invalid; obtain a new `tenant_access_token`
 - `230002`: the bot is not in the conversation, for example because it was removed from a group
 - `231001`: the reaction type is invalid; consult the official reaction documentation
